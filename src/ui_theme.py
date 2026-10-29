@@ -6,6 +6,7 @@ Provides shared CSS, Plotly layouts, export buttons, and hero components.
 """
 
 import io
+from pathlib import Path
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -211,13 +212,75 @@ def apply_fintech_theme():
         overflow: hidden;
       }
 
-      /* Sidebar branding */
+      /* Sidebar branding & Upper-Left Layout */
       [data-testid="stSidebar"] {
         background-color: #ffffff !important;
         border-right: 1px solid #e2e8f0 !important;
       }
+
+      /* Upper-left branding container */
+      [data-testid="stSidebarHeader"] {
+        padding: 1.25rem 1.15rem 0.6rem 1.15rem !important;
+        background-color: #ffffff !important;
+      }
+
+      [data-testid="stSidebarHeader"] img,
+      [data-testid="stLogo"] img {
+        height: 44px !important;
+        max-height: 48px !important;
+        width: auto !important;
+        object-fit: contain !important;
+      }
+
+      /* Sidebar Navigation polish */
+      [data-testid="stSidebarNav"] {
+        padding-top: 0.35rem !important;
+        padding-bottom: 0.85rem !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        margin-bottom: 0.85rem !important;
+      }
+
+      /* Rename root 'app' menu link to '🏠 Executive Overview' */
+      [data-testid="stSidebarNav"] ul li:first-child a span {
+        display: none !important;
+      }
+
+      [data-testid="stSidebarNav"] ul li:first-child a::after {
+        content: "🏠 Executive Overview";
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: inherit;
+        display: inline-block;
+      }
+
+      [data-testid="stSidebarNav"] ul li a {
+        border-radius: 8px !important;
+        margin: 2px 8px !important;
+        padding: 6px 12px !important;
+        transition: all 0.15s ease !important;
+      }
+
+      [data-testid="stSidebarNav"] ul li a:hover {
+        background-color: #f1f5f9 !important;
+      }
+
+      [data-testid="stSidebarNav"] ul li a[aria-current="page"] {
+        background-color: #eff6ff !important;
+        color: #2563eb !important;
+        font-weight: 700 !important;
+      }
     </style>
     """, unsafe_allow_html=True)
+
+    # Upper-Left Enterprise Logo Branding
+    logo_path = Path(__file__).resolve().parent.parent / "assets" / "logo.svg"
+    icon_path = Path(__file__).resolve().parent.parent / "assets" / "icon.svg"
+    if logo_path.exists():
+        try:
+            st.logo(str(logo_path), icon_image=str(icon_path) if icon_path.exists() else None, size="large")
+        except Exception:
+            pass
+
 
 
 def update_plotly_theme(fig: go.Figure, height: int = 350, title: str = ""):

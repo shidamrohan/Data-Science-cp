@@ -47,21 +47,7 @@ def main():
 
     # ── Sidebar Filters ───────────────────────────────────────────
     with st.sidebar:
-        st.markdown("""
-        <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-          <div style="background:#2563eb; color:#ffffff; font-size:1.4rem; padding:8px 12px; border-radius:10px; font-weight:800;">
-            🏪
-          </div>
-          <div>
-            <div style="font-weight:800; font-size:1.05rem; color:#0f172a; line-height:1.2;">Smart Retail</div>
-            <div style="font-size:0.75rem; color:#64748b; font-weight:600; text-transform:uppercase;">Analytics Suite</div>
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-        st.caption("Retail Decision-Support System")
-        st.divider()
-
-        st.markdown("<p style='font-weight:700; font-size:0.85rem; color:#0f172a; margin-bottom:4px;'>FILTER CRITERIA</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-weight:700; font-size:0.85rem; color:#0f172a; margin-bottom:4px; letter-spacing:0.04em;'>FILTER CRITERIA</p>", unsafe_allow_html=True)
         years = sorted(df["Year"].dropna().unique())
         sel_years = st.multiselect("📅 Order Year", years, default=years)
 
