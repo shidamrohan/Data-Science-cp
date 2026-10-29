@@ -175,3 +175,4 @@ App opens at: **`http://localhost:8501`**
 
 - **Q: How does demand forecasting differ from sales forecasting?**  
   *A:* Sales forecasting predicts dollar revenue to assist financial planning and cash-flow management. Demand forecasting predicts physical unit counts to prevent warehouse stockouts and calculate safety stock reorder buffers.
+

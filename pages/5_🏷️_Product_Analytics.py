@@ -1,11 +1,13 @@
-﻿"""
+"""
 pages/5_🏷️_Product_Analytics.py
 ─────────────────────────────────────────────────────────
-Product Intelligence module.
-  • Top / Bottom 10 by Sales & Profit
-  • Loss-making products (negative profit)
-  • Category treemap
-  • Automated decision-support recommendation cards
+Product Intelligence & Margin Diagnosis in Clean Minimalist FinTech Light Theme.
+Features:
+  • Top & Bottom 10 by Revenue and Net Profit
+  • Comprehensive Loss Leaders Ledger
+  • Category & Sub-Category Profitability Treemap & Quadrants
+  • Automated Decision-Support Recommendation Cards
+  • Export Catalog Intelligence to CSV & Excel
 """
 
 import sys
@@ -19,34 +21,11 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 from preprocessing import load_clean
-from formatters import inr, inr_full
+from formatters import inr, inr_full, inr_compact
+from ui_theme import apply_fintech_theme, update_plotly_theme, render_export_buttons, FINTECH_PALETTE
 
 st.set_page_config(page_title="Product Analytics", page_icon="🏷️", layout="wide")
-
-st.markdown("""
-<style>
-  .block-container { padding-top: 1.5rem; }
-  div[data-testid="stMetric"], [data-testid="metric-container"] {
-    background: linear-gradient(135deg, #1e3a5f 0%, #16213e 100%);
-    border: 1px solid #0f3460; border-radius: 12px; padding: 12px 14px;
-    min-width: 0 !important;
-  }
-  div[data-testid="stMetricLabel"] label, div[data-testid="stMetricLabel"] p, [data-testid="metric-container"] label {
-    color: #a0aec0 !important; font-size: 0.82rem !important; white-space: nowrap !important;
-  }
-  div[data-testid="stMetricValue"],
-  div[data-testid="stMetricValue"] > div,
-  div[data-testid="stMetricValue"] *,
-  [data-testid="metric-container"] [data-testid="metric-value"] {
-    color: #e2e8f0 !important; font-size: 1.15rem !important; font-weight: 700 !important;
-    white-space: nowrap !important; overflow: visible !important; text-overflow: unset !important;
-    letter-spacing: -0.3px !important;
-  }
-  div[data-testid="stMetricDelta"], [data-testid="metric-container"] [data-testid="metric-delta"] {
-    font-size: 0.82rem !important;
-  }
-</style>
-""", unsafe_allow_html=True)
+apply_fintech_theme()
 
 
 @st.cache_data(show_spinner=False)
@@ -55,7 +34,6 @@ def get_data():
 
 
 def growth_rate(series: pd.Series) -> float:
-    """Year-over-year growth rate using first vs last year totals."""
     if len(series) < 2:
         return 0.0
     first, last = series.iloc[0], series.iloc[-1]
@@ -63,55 +41,55 @@ def growth_rate(series: pd.Series) -> float:
 
 
 def generate_recommendations(row: pd.Series) -> dict:
-    """Generate an automated business recommendation for a product."""
     margin = row["Profit_Margin"]
     growth = row.get("Sales_Growth%", 0)
     discount = row.get("Avg_Discount%", 0)
 
     if margin > 20 and growth > 10:
-        color = "#68d391"
-        action = f"📈 Star Product: Consider increasing inventory by ~15–20% to meet growing demand."
-        badge = "⭐ Star"
+        color = "#10b981"
+        action = f"📈 Star Performer: Expand warehouse replenishment buffer by ~15–20% to meet accelerating organic demand."
+        badge = "⭐ Star Product"
     elif margin < 0:
-        color = "#e53e3e"
-        action = f"🚨 Loss Leader: Profit margin is negative ({margin:.1f}%). Reduce discount (currently {discount:.1f}%) or renegotiate supplier cost."
-        badge = "🚨 Loss Maker"
+        color = "#ef4444"
+        action = f"🚨 Loss Leader: Operating margin is negative ({margin:.1f}%). Cap promotional discounts (currently {discount:.1f}%) or renegotiate supplier COGS."
+        badge = "🚨 Margin Drain"
     elif margin > 15 and growth < 0:
-        color = "#f6ad55"
-        action = f"⚠️ Declining Product: Good margin ({margin:.1f}%) but sales declining ({growth:.1f}%). Launch promotional campaign."
-        badge = "⚠️ Declining"
+        color = "#f59e0b"
+        action = f"⚠️ Declining Cash Cow: Healthy margin ({margin:.1f}%) but revenue velocity is slowing ({growth:.1f}%). Deploy targeted email bundle campaign."
+        badge = "⚠️ Declining Velocity"
     elif discount > 25 and margin < 10:
-        color = "#fc8181"
-        action = f"🏷️ Over-Discounted: {discount:.1f}% average discount is eroding profitability. Cap discounts at 15%."
-        badge = "🏷️ Over-Discount"
+        color = "#f97316"
+        action = f"🏷️ Over-Discounted Item: High promotional markdown ({discount:.1f}%) is cannibalizing margin. Enforce a 15% discount cap."
+        badge = "🏷️ Over-Discounted"
     elif growth > 15:
-        color = "#4299e1"
-        action = f"🚀 Fast Growing: Sales up {growth:.1f}%. Increase marketing spend and stock buffer."
-        badge = "🚀 Fast Growing"
+        color = "#2563eb"
+        action = f"🚀 Fast Mover: Sales growing at +{growth:.1f}% YoY. Increase promotional visibility and feature on homepage."
+        badge = "🚀 High Growth"
     else:
-        color = "#a0aec0"
-        action = "✅ Stable performer. Monitor quarterly for trend changes."
-        badge = "✅ Stable"
+        color = "#64748b"
+        action = "✅ Stable catalog item. Monitor quarterly for seasonal velocity shifts."
+        badge = "✅ Stable Core"
 
     return {"color": color, "action": action, "badge": badge}
 
 
 def main():
-    st.markdown("## 🏷️ Product Analytics")
-    st.caption("Product performance, profitability analysis, and AI-assisted business recommendations.")
+    st.markdown("## 🏷️ Product Intelligence & Profitability Analytics")
+    st.caption("Deep-dive catalog performance, loss-leader diagnosis, and automated commercial decision support.")
     st.divider()
 
     df = get_data()
 
+    # ── Sidebar Filters ───────────────────────────────────────────
     with st.sidebar:
-        st.header("🔍 Filters")
+        st.markdown("<p style='font-weight:700; font-size:0.85rem; color:#0f172a; margin-bottom:4px;'>CATALOG FILTERS</p>", unsafe_allow_html=True)
         cats = st.multiselect("📦 Category", sorted(df["Category"].unique()), default=sorted(df["Category"].unique()))
         regions = st.multiselect("🗺️ Region", sorted(df["Region"].unique()), default=sorted(df["Region"].unique()))
-        top_n = st.slider("Top N Products", 5, 20, value=10)
+        top_n = st.slider("Top N Display Limit", 5, 20, value=10)
 
     fdf = df[df["Category"].isin(cats) & df["Region"].isin(regions)].copy()
 
-    # ── Build product-level summary ───────────────────────────────
+    # ── Product Aggregations ──────────────────────────────────────
     prod = (
         fdf.groupby(["Product Name", "Category", "Sub-Category"])
         .agg(
@@ -127,33 +105,32 @@ def main():
     prod["Avg_Discount%"] = (prod["Avg_Discount"] * 100).round(1)
     prod["Revenue_Per_Unit"] = (prod["Total_Sales"] / prod["Total_Qty"]).round(2)
 
-    # Growth: compare first vs last year of sales for each product
-    growth_data = (
-        fdf.groupby(["Product Name", "Year"])["Sales"]
-        .sum()
-        .reset_index()
-    )
+    # YoY Growth Calculation per Product
+    growth_data = fdf.groupby(["Product Name", "Year"])["Sales"].sum().reset_index()
     growth_rates = {}
     for name, grp in growth_data.groupby("Product Name"):
         grp_sorted = grp.sort_values("Year")
         growth_rates[name] = growth_rate(grp_sorted["Sales"])
     prod["Sales_Growth%"] = prod["Product Name"].map(growth_rates).round(2)
 
-    # ── KPIs ──────────────────────────────────────────────────────
-    total_prods   = len(prod)
-    profitable    = (prod["Total_Profit"] > 0).sum()
-    loss_making   = (prod["Total_Profit"] < 0).sum()
-    avg_margin    = prod["Profit_Margin"].mean()
+    # ── KPI Strip ─────────────────────────────────────────────────
+    total_prods = len(prod)
+    profitable  = (prod["Total_Profit"] > 0).sum()
+    loss_making = (prod["Total_Profit"] < 0).sum()
+    avg_margin  = prod["Profit_Margin"].mean()
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("📦 Total Products",  f"{total_prods:,}")
-    c2.metric("✅ Profitable",      f"{profitable:,}")
-    c3.metric("🚨 Loss Making",     f"{loss_making:,}")
-    c4.metric("📊 Avg Profit Margin", f"{avg_margin:.1f}%")
+    c1.metric("📦 Active Catalog Items", f"{total_prods:,}")
+    c2.metric("✅ Profitable SKUs",       f"{profitable:,}", delta=f"{profitable/total_prods*100:.1f}% share", delta_color="normal")
+    c3.metric("🚨 Loss-Making SKUs",      f"{loss_making:,}", delta=f"-{loss_making/total_prods*100:.1f}% share", delta_color="inverse")
+    c4.metric("📊 Catalog Mean Margin",   f"{avg_margin:.1f}%")
 
-    st.divider()
+    st.write("")
 
-    tab1, tab2, tab3, tab4 = st.tabs(["🏆 Rankings", "📉 Loss Leaders", "🗂️ Category View", "💡 Recommendations"])
+    # ── Tabs ──────────────────────────────────────────────────────
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "🏆 Top & Bottom Rankings", "📉 Loss Leaders Diagnosis", "🗂️ Category Treemap & Quadrant", "💡 Automated Action Advisories"
+    ])
 
     # ════════════════════════════════════════
     # TAB 1 — RANKINGS
@@ -162,103 +139,75 @@ def main():
         col_l, col_r = st.columns(2)
 
         with col_l:
-            st.subheader(f"🏆 Top {top_n} by Sales")
+            st.markdown(f"#### 🏆 Top {top_n} SKUs by Revenue")
             top_sales = prod.nlargest(top_n, "Total_Sales")
             fig_ts = px.bar(
                 top_sales, x="Total_Sales", y="Product Name", orientation="h",
-                color="Category",
-                color_discrete_sequence=px.colors.qualitative.Set2,
+                color="Category", color_discrete_sequence=["#2563eb", "#10b981", "#f59e0b"],
             )
-            fig_ts.update_layout(
-                height=400, plot_bgcolor="#0d1b2a", paper_bgcolor="#0d1b2a",
-                font_color="#a0aec0", xaxis=dict(gridcolor="#1e3a5f"), yaxis_title="",
-            )
+            fig_ts.update_traces(hovertemplate="<b>%{y}</b><br>Sales: ₹%{x:,.0f}<extra></extra>")
+            update_plotly_theme(fig_ts, height=400)
+            fig_ts.update_layout(yaxis_title="", xaxis_title="Total Revenue (₹)")
             st.plotly_chart(fig_ts, use_container_width=True)
 
-            st.subheader(f"📉 Bottom {top_n} by Sales")
+            st.markdown(f"#### 📉 Bottom {top_n} SKUs by Revenue")
             bot_sales = prod.nsmallest(top_n, "Total_Sales")
             fig_bs = px.bar(
                 bot_sales, x="Total_Sales", y="Product Name", orientation="h",
-                color_discrete_sequence=["#4a5568"],
+                color_discrete_sequence=["#94a3b8"],
             )
-            fig_bs.update_layout(
-                height=400, plot_bgcolor="#0d1b2a", paper_bgcolor="#0d1b2a",
-                font_color="#a0aec0", xaxis=dict(gridcolor="#1e3a5f"), yaxis_title="",
-            )
+            fig_bs.update_traces(hovertemplate="<b>%{y}</b><br>Sales: ₹%{x:,.0f}<extra></extra>")
+            update_plotly_theme(fig_bs, height=400)
+            fig_bs.update_layout(yaxis_title="", xaxis_title="Total Revenue (₹)")
             st.plotly_chart(fig_bs, use_container_width=True)
 
         with col_r:
-            st.subheader(f"💰 Top {top_n} by Profit")
+            st.markdown(f"#### 💰 Top {top_n} Most Profitable SKUs")
             top_profit = prod.nlargest(top_n, "Total_Profit")
             fig_tp = px.bar(
                 top_profit, x="Total_Profit", y="Product Name", orientation="h",
-                color="Total_Profit", color_continuous_scale="Greens",
+                color="Total_Profit", color_continuous_scale=["#a7f3d0", "#059669"],
             )
-            fig_tp.update_layout(
-                height=400, plot_bgcolor="#0d1b2a", paper_bgcolor="#0d1b2a",
-                font_color="#a0aec0", xaxis=dict(gridcolor="#1e3a5f"),
-                coloraxis_showscale=False, yaxis_title="",
-            )
+            fig_tp.update_traces(hovertemplate="<b>%{y}</b><br>Profit: ₹%{x:,.0f}<extra></extra>")
+            update_plotly_theme(fig_tp, height=400)
+            fig_tp.update_layout(yaxis_title="", coloraxis_showscale=False, xaxis_title="Net Profit (₹)")
             st.plotly_chart(fig_tp, use_container_width=True)
 
-            st.subheader(f"🚨 Top {top_n} Loss Makers by Profit")
+            st.markdown(f"#### 🚨 Top {top_n} Loss-Making SKUs")
             bot_profit = prod.nsmallest(top_n, "Total_Profit")
             fig_bp = px.bar(
                 bot_profit, x="Total_Profit", y="Product Name", orientation="h",
-                color_discrete_sequence=["#e53e3e"],
+                color_discrete_sequence=["#ef4444"],
             )
-            fig_bp.update_layout(
-                height=400, plot_bgcolor="#0d1b2a", paper_bgcolor="#0d1b2a",
-                font_color="#a0aec0", xaxis=dict(gridcolor="#1e3a5f"), yaxis_title="",
-            )
+            fig_bp.update_traces(hovertemplate="<b>%{y}</b><br>Loss: ₹%{x:,.0f}<extra></extra>")
+            update_plotly_theme(fig_bp, height=400)
+            fig_bp.update_layout(yaxis_title="", xaxis_title="Net Operating Loss (₹)")
             st.plotly_chart(fig_bp, use_container_width=True)
-
-        st.subheader(f"🚀 Top {top_n} Fastest Growing Products")
-        fast_growing = prod.dropna(subset=["Sales_Growth%"]).nlargest(top_n, "Sales_Growth%")
-        fig_fg = px.bar(
-            fast_growing, x="Sales_Growth%", y="Product Name", orientation="h",
-            color="Sales_Growth%", color_continuous_scale="Blues",
-        )
-        fig_fg.update_layout(
-            height=360, plot_bgcolor="#0d1b2a", paper_bgcolor="#0d1b2a",
-            font_color="#a0aec0", xaxis=dict(gridcolor="#1e3a5f"),
-            coloraxis_showscale=False, yaxis_title="",
-        )
-        st.plotly_chart(fig_fg, use_container_width=True)
 
     # ════════════════════════════════════════
     # TAB 2 — LOSS LEADERS
     # ════════════════════════════════════════
     with tab2:
         loss = prod[prod["Total_Profit"] < 0].sort_values("Total_Profit")
-        st.markdown(f"### 🚨 {len(loss):,} Products Generating Losses")
+        st.markdown(f"#### 🚨 Catalog Loss Leaders ({len(loss):,} items operating at a loss)")
+        
+        c_loss_hdr, c_loss_exp = st.columns([3, 2])
+        with c_loss_hdr:
+            st.caption("These items destroy profit margins due to aggressive markdowns or high returns. Export to take supplier action:")
+        with c_loss_exp:
+            render_export_buttons(loss, filename_prefix="loss_leader_products")
 
-        fig_loss = go.Figure(go.Bar(
-            x=loss["Total_Profit"], y=loss["Product Name"],
-            orientation="h",
-            marker_color="#e53e3e",
-            text=loss["Total_Profit"].apply(lambda v: inr(v)),
-            textposition="outside",
-        ))
-        fig_loss.update_layout(
-            title="Loss-Making Products (All)",
-            height=max(400, len(loss) * 25),
-            plot_bgcolor="#0d1b2a", paper_bgcolor="#0d1b2a",
-            font_color="#a0aec0", xaxis=dict(gridcolor="#1e3a5f"),
-        )
-        st.plotly_chart(fig_loss, use_container_width=True)
-
-        st.subheader("📋 Loss Leader Detail Table")
-        loss_display = loss[["Product Name", "Category", "Sub-Category",
-                               "Total_Sales", "Total_Profit", "Profit_Margin",
-                               "Avg_Discount%", "Total_Qty"]].copy()
-        loss_display.columns = ["Product", "Category", "Sub-Category",
-                                  "Sales ($)", "Profit ($)", "Margin %",
-                                  "Avg Discount %", "Units Sold"]
+        loss_display = loss[[
+            "Product Name", "Category", "Sub-Category", "Total_Sales",
+            "Total_Profit", "Profit_Margin", "Avg_Discount%", "Total_Qty"
+        ]].copy()
+        loss_display["Total_Sales"] = loss_display["Total_Sales"].apply(inr)
+        loss_display["Total_Profit"] = loss_display["Total_Profit"].apply(inr)
+        loss_display.columns = ["Product Name", "Category", "Sub-Category", "Total Revenue (₹)", "Net Profit / Loss (₹)", "Margin %", "Avg Discount %", "Units Sold"]
         st.dataframe(loss_display, use_container_width=True, hide_index=True)
 
     # ════════════════════════════════════════
-    # TAB 3 — CATEGORY VIEW
+    # TAB 3 — CATEGORY MATRIX & QUADRANT
     # ════════════════════════════════════════
     with tab3:
         sub_perf = (
@@ -269,69 +218,52 @@ def main():
         sub_perf["Margin%"] = (sub_perf["Profit"] / sub_perf["Sales"] * 100).round(1)
 
         fig_tree = px.treemap(
-            sub_perf, path=[px.Constant("All"), "Category", "Sub-Category"],
+            sub_perf, path=[px.Constant("All Products"), "Category", "Sub-Category"],
             values="Sales", color="Margin%",
-            color_continuous_scale=["#e53e3e", "#f6e05e", "#48bb78"],
+            color_continuous_scale=["#ef4444", "#fbbf24", "#10b981"],
             color_continuous_midpoint=0,
-            hover_data={"Profit": ":,.0f", "Qty": True},
         )
-        fig_tree.update_layout(
-            title="Category / Sub-Category Sales Treemap (color = Profit Margin %)",
-            height=500, paper_bgcolor="#0d1b2a", font_color="#a0aec0",
-        )
+        update_plotly_theme(fig_tree, height=450, title="Category Sales Treemap (Color = Profit Margin %)")
         st.plotly_chart(fig_tree, use_container_width=True)
 
         fig_quad = px.scatter(
             sub_perf, x="Sales", y="Profit",
-            size="Qty", color="Category",
-            text="Sub-Category",
-            color_discrete_sequence=px.colors.qualitative.Set2,
+            size="Qty", color="Category", text="Sub-Category",
+            color_discrete_sequence=["#2563eb", "#10b981", "#f59e0b"],
         )
-        fig_quad.add_hline(y=0, line_dash="dash", line_color="#e53e3e",
-                            annotation_text="Break-even", annotation_font_color="#e53e3e")
+        fig_quad.add_hline(y=0, line_dash="dash", line_color="#ef4444",
+                           annotation_text="Break-even (0 Profit)", annotation_font_color="#ef4444")
         fig_quad.update_traces(textposition="top center")
-        fig_quad.update_layout(
-            title="Sub-Category: Sales vs Profit Quadrant (bubble = units sold)",
-            height=440, plot_bgcolor="#0d1b2a", paper_bgcolor="#0d1b2a",
-            font_color="#a0aec0", xaxis=dict(gridcolor="#1e3a5f"), yaxis=dict(gridcolor="#1e3a5f"),
-        )
+        update_plotly_theme(fig_quad, height=450, title="Sales vs Operating Profit Quadrant (Bubble Size = Volume)")
         st.plotly_chart(fig_quad, use_container_width=True)
 
     # ════════════════════════════════════════
-    # TAB 4 — AUTOMATED RECOMMENDATIONS
+    # TAB 4 — AUTOMATED ACTION ADVISORIES
     # ════════════════════════════════════════
     with tab4:
-        st.markdown("### 💡 Automated Product Recommendations")
-        st.caption("System-generated insights based on profit margin, growth rate, and discount level.")
+        st.markdown("#### 💡 Algorithmic Decision-Support Advisories")
+        st.caption("Actionable rules engine analyzing margin thresholds, discount elasticity, and growth trajectories.")
 
-        search = st.text_input("🔍 Search product name", "")
+        search = st.text_input("🔍 Search specific product name…", "")
         filtered = prod[prod["Product Name"].str.contains(search, case=False)] if search else prod
-
-        # Sort: loss makers first, then fast growing, then rest
         filtered = filtered.sort_values("Total_Profit")
 
-        for _, row in filtered.head(30).iterrows():
+        for _, row in filtered.head(25).iterrows():
             rec = generate_recommendations(row)
-            with st.expander(f"{rec['badge']}  {row['Product Name'][:70]}"):
-                r1, r2, r3 = st.columns(3)
-                r1.metric("💰 Total Sales",    inr(row['Total_Sales']))
-                r2.metric("📈 Profit Margin",  f"{row['Profit_Margin']:.1f}%")
-                r3.metric("🚀 YoY Growth",     f"{row.get('Sales_Growth%', 0):.1f}%")
-
-                r4, r5, r6 = st.columns(3)
-                r4.metric("📦 Units Sold",     f"{int(row['Total_Qty']):,}")
-                r5.metric("🏷️ Avg Discount",  f"{row['Avg_Discount%']:.1f}%")
-                r6.metric("🛒 Orders",         f"{int(row['Orders']):,}")
+            with st.expander(f"{rec['badge']} · {row['Product Name'][:75]}"):
+                r1, r2, r3, r4 = st.columns(4)
+                r1.metric("💰 Total Revenue",   inr(row['Total_Sales']))
+                r2.metric("📈 Profit Margin",   f"{row['Profit_Margin']:.1f}%")
+                r3.metric("🏷️ Avg Discount",   f"{row['Avg_Discount%']:.1f}%")
+                r4.metric("🚀 YoY Growth",      f"{row.get('Sales_Growth%', 0):.1f}%")
 
                 st.markdown(f"""
-                <div class="insight-card" style="background:{rec['color']}18; border:1.5px solid {rec['color']};">
-                  <strong style="color:{rec['color']};">💡 Recommendation</strong><br>
-                  <span style="color:#e2e8f0;">{rec['action']}</span>
+                <div style="background:#f8fafc; border-left:4px solid {rec['color']}; border-radius:8px; padding:12px 16px; margin-top:8px;">
+                  <span style="color:#0f172a; font-weight:700; font-size:0.88rem;">Strategic Action:</span><br>
+                  <span style="color:#334155; font-size:0.86rem; line-height:1.5;">{rec['action']}</span>
                 </div>
                 """, unsafe_allow_html=True)
 
 
 if __name__ == "__main__":
     main()
-
-
