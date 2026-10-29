@@ -284,3 +284,4 @@ def render_export_buttons(df: pd.DataFrame, filename_prefix: str = "retail_data"
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             key=f"dl_excel_{filename_prefix}",
         )
+
