@@ -247,16 +247,34 @@ def main():
         """, unsafe_allow_html=True)
 
     with col_info:
+        net_balance = current_stock - recommended_qty
+        if net_balance < 0:
+            balance_color = "#ef4444"
+            balance_badge = f"⚠️ Shortfall Deficit: {abs(net_balance):,} units"
+            balance_desc = "Current warehouse inventory cannot cover projected demand + safety buffer. Immediate purchase order recommended."
+        else:
+            balance_color = "#10b981"
+            balance_badge = f"✅ Stock Surplus: +{net_balance:,} units"
+            balance_desc = "Current warehouse stock adequately covers projected demand and the 15% safety buffer."
+
         st.markdown(f"""
         <div class="fintech-card" style="padding:16px 20px;">
-          <h4 style="margin:0 0 10px 0; font-size:1.05rem;">📋 Inventory Replenishment Plan</h4>
+          <h4 style="margin:0 0 10px 0; font-size:1.05rem;">📋 Inventory Replenishment & Shortfall Analysis</h4>
           <table style="width:100%; font-size:0.88rem; color:#334155;">
             <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:4px 0; color:#64748b;">Sub-Category / Item</td><td style="font-weight:700; text-align:right;">{sel_sub}</td></tr>
             <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:4px 0; color:#64748b;">Forecast Planning Horizon</td><td style="font-weight:700; text-align:right;">{forecast_months} month(s)</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:4px 0; color:#64748b;">Current On-Hand Stock</td><td style="font-weight:700; text-align:right;">{current_stock:,} units</td></tr>
             <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:4px 0; color:#64748b;">Total Predicted Demand</td><td style="font-weight:700; text-align:right;">{total_demand:,} units</td></tr>
             <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:4px 0; color:#64748b;">Safety Buffer Factor</td><td style="font-weight:700; text-align:right;">+{SAFETY_BUFFER*100:.0f}% buffer</td></tr>
-            <tr><td style="padding:4px 0; color:#0f172a; font-weight:700;">Recommended Purchase Order</td><td style="font-weight:800; color:#2563eb; font-size:1rem; text-align:right;">{recommended_qty:,} units</td></tr>
+            <tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:4px 0; color:#0f172a; font-weight:700;">Recommended Reorder Target</td><td style="font-weight:800; color:#2563eb; font-size:1rem; text-align:right;">{recommended_qty:,} units</td></tr>
+            <tr><td style="padding:4px 0; color:#0f172a; font-weight:700;">Net Stock Shortfall / Surplus</td><td style="font-weight:800; color:{balance_color}; font-size:1rem; text-align:right;">{balance_badge}</td></tr>
           </table>
+          <div style="margin-top:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; font-size:0.78rem; color:#475569;">
+            <b>Operational Recommendation:</b> {balance_desc}
+          </div>
+          <div style="font-size:0.72rem; color:#94a3b8; margin-top:6px;">
+            ℹ️ <i><b>Scenario Planning Note:</b> Historical transaction data records orders placed. Current on-hand stock is simulated via the sidebar to evaluate inventory replenishment risks.</i>
+          </div>
         </div>
         """, unsafe_allow_html=True)
 

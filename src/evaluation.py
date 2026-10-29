@@ -1,4 +1,4 @@
-﻿"""
+"""
 src/evaluation.py
 ──────────────────────────────────────────────────────────
 Central evaluation utilities and a one-shot function that
@@ -103,6 +103,41 @@ def load_cluster_silhouette() -> float:
         return round(float(silhouette_score(X, labels)), 4)
     except Exception:
         return 0.0
+
+
+def load_test_predictions() -> pd.DataFrame:
+    """Return DataFrame of test-set actual sales vs Random Forest predictions."""
+    parquet = PROCESSED_DIR / "monthly_sales.parquet"
+    if not parquet.exists():
+        return pd.DataFrame()
+
+    monthly = pd.read_parquet(parquet)
+    drop_cols = ["Sales", "YearMonthStr", "Date", "Profit", "Month", "Year"]
+    feat_cols = [c for c in monthly.columns if c not in drop_cols]
+    X = monthly[feat_cols].select_dtypes(include=[np.number])
+    y = monthly["Sales"]
+    valid = X.notna().all(axis=1)
+    X, y, dates = X[valid], y[valid], monthly.loc[valid, "YearMonthStr"]
+
+    split = int(len(X) * 0.8)
+    X_test = X.iloc[split:].fillna(0)
+    y_test = y.iloc[split:]
+    dates_test = dates.iloc[split:]
+
+    rf_path = MODELS_DIR / "sales_rf_model.pkl"
+    if not rf_path.exists():
+        return pd.DataFrame()
+
+    rf_model = joblib.load(rf_path)
+    pred_rf = rf_model.predict(X_test)
+
+    res = pd.DataFrame({
+        "Period": dates_test.values,
+        "Actual_Sales": y_test.values,
+        "Predicted_Sales": np.round(pred_rf, 2),
+        "Residual_Error": np.round(y_test.values - pred_rf, 2),
+    })
+    return res.groupby("Period").mean().reset_index().sort_values("Period")
 
 
 if __name__ == "__main__":

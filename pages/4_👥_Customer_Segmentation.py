@@ -206,18 +206,92 @@ def main():
                 st.plotly_chart(fig_box, use_container_width=True)
 
     with tab4:
-        st.markdown(f"#### 📋 Customer Account Ledger ({len(frf):,} buyers)")
+        st.markdown(f"#### 📋 Customer Account Ledger & Directory ({len(frf):,} accounts)")
+
+        # Helper to attach formatted emoji badges
+        def get_persona_badge(label: str) -> str:
+            badge_map = {
+                "VIP Customers": "👑 VIP Customer",
+                "Regular Customers": "⭐ Regular Customer",
+                "Occasional Shoppers": "🎟️ Occasional Shopper",
+                "At-Risk Customers": "⚠️ At-Risk Customer",
+            }
+            return badge_map.get(label, label)
+
+        # ── Customer Deep Dive Inspector ───────────────────────────
+        st.markdown("##### 👤 Single Account Inspector")
+        col_s1, col_s2 = st.columns([2, 1.2])
+        with col_s1:
+            search_query = st.text_input("🔍 Search Customer by Name or ID", placeholder="Type customer name, e.g. Alex Avila or Claire Gute...", key="cust_search_input")
+
+        filtered_roster = frf.copy()
+        if search_query.strip():
+            q = search_query.strip().lower()
+            filtered_roster = filtered_roster[
+                filtered_roster["CustomerName"].str.lower().str.contains(q, na=False) |
+                filtered_roster["Customer ID"].str.lower().str.contains(q, na=False)
+            ]
+
+        with col_s2:
+            cust_options = sorted(filtered_roster["CustomerName"].dropna().unique())
+            selected_customer = st.selectbox("Select Account from Results", cust_options if cust_options else ["No matches found"], key="cust_select_dropdown")
+
+        if selected_customer and selected_customer != "No matches found":
+            c_row = filtered_roster[filtered_roster["CustomerName"] == selected_customer].iloc[0]
+            persona = c_row["Segment_Label"]
+            badge = get_persona_badge(persona)
+            color = PERSONA_COLORS.get(persona, "#2563eb")
+            action = TARGETING_ACTIONS.get(persona, "—")
+            mkt_seg = c_row.get("Segment", "General Retail")
+            aov_val = c_row["Monetary"] / c_row["Frequency"] if c_row["Frequency"] > 0 else 0
+
+            st.markdown(f"""
+            <div style="background:#ffffff; border:1px solid #e2e8f0; border-left:5px solid {color}; border-radius:12px; padding:18px 22px; box-shadow:0 1px 3px rgba(15,23,42,0.05); margin-bottom:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <div>
+                  <span style="font-size:1.3rem; font-weight:800; color:#0f172a;">{selected_customer}</span>
+                  <span style="font-size:0.88rem; color:#64748b; font-weight:600; margin-left:10px;">({c_row['Customer ID']} · {mkt_seg})</span>
+                </div>
+                <span style="background:{color}18; color:{color}; border:1.5px solid {color}55; border-radius:9999px; padding:4px 14px; font-weight:800; font-size:0.85rem; letter-spacing:0.02em;">
+                  {badge}
+                </span>
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:14px; margin-top:14px; padding-top:12px; border-top:1px solid #f1f5f9;">
+                <div><div style="color:#64748b; font-size:0.75rem; font-weight:700; text-transform:uppercase;">Lifetime Revenue</div><div style="color:#0f172a; font-size:1.15rem; font-weight:800;">{inr(c_row['Monetary'])}</div></div>
+                <div><div style="color:#64748b; font-size:0.75rem; font-weight:700; text-transform:uppercase;">Total Orders Placed</div><div style="color:#0f172a; font-size:1.15rem; font-weight:800;">{int(c_row['Frequency']):,} orders</div></div>
+                <div><div style="color:#64748b; font-size:0.75rem; font-weight:700; text-transform:uppercase;">Average Order Value</div><div style="color:#0f172a; font-size:1.15rem; font-weight:800;">{inr(aov_val)}</div></div>
+                <div><div style="color:#64748b; font-size:0.75rem; font-weight:700; text-transform:uppercase;">Days Since Last Order</div><div style="color:#0f172a; font-size:1.15rem; font-weight:800;">{int(c_row['Recency']):,} days ago</div></div>
+              </div>
+              <div style="margin-top:12px; background:#f8fafc; border-radius:8px; padding:10px 14px; font-size:0.83rem; color:#334155; border:1px solid #e2e8f0;">
+                🎯 <b>Prescriptive Account Action:</b> {action}
+              </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.divider()
+
+        # ── Full Customer Directory Table with Badges ──────────────
+        st.markdown(f"##### 📋 Full Customer Roster ({len(filtered_roster):,} accounts matching filters)")
         c_tbl_hdr, c_tbl_exp = st.columns([3, 2])
         with c_tbl_hdr:
-            st.caption("Search individual customers, examine RFM scores, or export segment profiles:")
-        
-        display = frf[["Customer ID", "Segment_Label", "Recency", "Frequency", "Monetary"]].copy()
+            st.caption("Browse customer accounts, view RFM metrics and cohort badges, or export to CSV/Excel:")
+
+        display = filtered_roster[["CustomerName", "Customer ID", "Segment", "Segment_Label", "Recency", "Frequency", "Monetary"]].copy()
+        display["Persona Badge"] = display["Segment_Label"].apply(get_persona_badge)
+        display["Avg Order Value (₹)"] = (display["Monetary"] / display["Frequency"]).apply(inr)
+
         with c_tbl_exp:
-            render_export_buttons(display, filename_prefix="customer_rfm_segments")
+            render_export_buttons(display, filename_prefix="customer_persona_roster")
 
         display["Monetary"] = display["Monetary"].apply(inr)
-        display.columns = ["Customer ID", "Assigned Cohort", "Recency (Days)", "Frequency (# Orders)", "Total Lifetime Spend (₹)"]
-        st.dataframe(display.sort_values("Recency (Days)", ascending=True), use_container_width=True, hide_index=True)
+        display = display[["CustomerName", "Customer ID", "Persona Badge", "Segment", "Recency", "Frequency", "Monetary", "Avg Order Value (₹)"]]
+        display.columns = ["Customer Name", "Customer ID", "Persona Badge", "Market Segment", "Recency (Days)", "Frequency (# Orders)", "Lifetime Spend (₹)", "Avg Order Value (₹)"]
+
+        st.dataframe(
+            display.sort_values("Recency (Days)", ascending=True),
+            use_container_width=True,
+            hide_index=True
+        )
 
 
 if __name__ == "__main__":

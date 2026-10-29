@@ -23,7 +23,7 @@ import plotly.graph_objects as go
 import joblib
 from pathlib import Path as _Path
 
-from evaluation import load_sales_metrics, load_feature_importance, load_cluster_silhouette
+from evaluation import load_sales_metrics, load_feature_importance, load_cluster_silhouette, load_test_predictions
 from formatters import inr, inr_full, inr_compact
 from ui_theme import apply_fintech_theme, update_plotly_theme, render_export_buttons, FINTECH_PALETTE
 
@@ -114,6 +114,41 @@ def main():
             fig_err.update_traces(textposition="outside")
             update_plotly_theme(fig_err, height=220, title="Error Loss Metrics (Lower is Better)")
             st.plotly_chart(fig_err, use_container_width=True)
+
+        # ── Actual vs Predicted & Residual Diagnostics ──────────────
+        test_pred_df = load_test_predictions()
+        if not test_pred_df.empty:
+            st.write("")
+            with st.expander("📈 Test Split Diagnostics: Actual vs Predicted Revenue & Residual Error", expanded=False):
+                col_diag1, col_diag2 = st.columns(2)
+                with col_diag1:
+                    fig_avp = go.Figure()
+                    fig_avp.add_trace(go.Scatter(
+                        x=test_pred_df["Period"], y=test_pred_df["Actual_Sales"],
+                        mode="lines+markers", name="Actual Sales",
+                        line=dict(color="#2563eb", width=2.5),
+                        marker=dict(size=6, color="#2563eb"),
+                    ))
+                    fig_avp.add_trace(go.Scatter(
+                        x=test_pred_df["Period"], y=test_pred_df["Predicted_Sales"],
+                        mode="lines+markers", name="Random Forest Predicted",
+                        line=dict(color="#10b981", width=2, dash="dash"),
+                        marker=dict(size=6, color="#10b981"),
+                    ))
+                    update_plotly_theme(fig_avp, height=300, title="Actual vs Predicted Sales (Held-out Test Period)")
+                    fig_avp.update_yaxes(title_text="Revenue (₹)")
+                    st.plotly_chart(fig_avp, use_container_width=True)
+
+                with col_diag2:
+                    fig_res = px.histogram(
+                        test_pred_df, x="Residual_Error", nbins=15,
+                        color_discrete_sequence=["#64748b"],
+                        marginal="box",
+                    )
+                    fig_res.add_vline(x=0, line_dash="dash", line_color="#ef4444", annotation_text="Zero Bias", annotation_position="top left")
+                    update_plotly_theme(fig_res, height=300, title="Residual Error Distribution (Actual - Predicted)")
+                    fig_res.update_xaxes(title_text="Error Variance (₹)")
+                    st.plotly_chart(fig_res, use_container_width=True)
 
     st.divider()
 
