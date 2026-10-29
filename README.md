@@ -172,17 +172,34 @@ Open **[http://localhost:8501](http://localhost:8501)** in your browser.
 
 ```
 smart-retail-analytics/
-├── app.py                         # Executive Overview Dashboard (Home)
-├── requirements.txt               # Pinned production dependencies
-├── README.md                      # Comprehensive project guide & dataset info
-├── PROJECT_OVERVIEW.md            # Detailed technical and business document
-├── Smart_Retail_Analytics_Project_Report.docx # Formatted corporate Word report
-├── .gitignore                     # Git ignore rules
+├── .streamlit/
+│   └── config.toml                # FinTech Light UI theme configuration
 │
 ├── data/
 │   ├── raw/
-│   │   └── SampleSuperstore.csv   # Historical retail transactions (9,994 rows)
-│   └── processed/                 # Cleaned & feature-engineered Parquet datasets
+│   │   └── SampleSuperstore.csv   # Benchmark retail transactions (9,994 rows)
+│   └── processed/                 # Processed & feature-engineered Parquet datasets
+│
+├── docs/
+│   ├── PROJECT_OVERVIEW.md        # Technical architecture, methodology & business rationale
+│   └── Smart_Retail_Analytics_Project_Report.docx # Formatted academic & corporate Word report
+│
+├── models/                        # Pre-trained ML models & metadata (.pkl, .csv)
+│   ├── demand_rf_model.pkl        # Demand forecasting Random Forest model
+│   ├── sales_rf_model.pkl         # Sales revenue Random Forest model (Best R²=0.6122)
+│   ├── kmeans_model.pkl           # Customer segmentation K-Means model (K=4)
+│   └── sales_feature_importance.csv # Extracted feature weightings
+│
+├── notebooks/
+│   └── EDA.ipynb                  # Interactive Jupyter exploratory data analysis
+│
+├── pages/
+│   ├── 1_📊_Sales_Analytics.py      # Granular filters, trends & discount trap
+│   ├── 2_📈_Sales_Forecast.py       # Live revenue forecast with growth predictor
+│   ├── 3_📦_Demand_Forecast.py      # Inventory risk & recommended stock levels
+│   ├── 4_👥_Customer_Segmentation.py # 2D/3D RFM cluster visualization & targeting
+│   ├── 5_🏷️_Product_Analytics.py     # Margin rankings, loss leaders & recommendations
+│   └── 6_🧠_Model_Performance.py    # Academic viva & model benchmarking page
 │
 ├── src/
 │   ├── __init__.py
@@ -196,15 +213,21 @@ smart-retail-analytics/
 │   ├── evaluation.py              # Metrics loader (MAE, RMSE, R², Silhouette)
 │   └── train_all.py               # Complete end-to-end pipeline runner
 │
-├── pages/
-│   ├── 1_📊_Sales_Analytics.py      # Granular filters, trends & discount trap
-│   ├── 2_📈_Sales_Forecast.py       # Live revenue forecast with growth predictor
-│   ├── 3_📦_Demand_Forecast.py      # Inventory risk & recommended stock levels
-│   ├── 4_👥_Customer_Segmentation.py # 2D/3D RFM cluster visualization & targeting
-│   ├── 5_🏷️_Product_Analytics.py     # Margin rankings, loss leaders & recommendations
-│   └── 6_🧠_Model_Performance.py    # Academic viva & model benchmarking page
+├── tests/
+│   ├── __init__.py
+│   └── test_pipeline.py           # Pipeline validation unit tests
 │
-├── models/                        # Pre-trained model artifacts (.pkl, .csv)
-└── tests/
-    └── test_pipeline.py           # Unit tests
+├── app.py                         # Executive Overview Dashboard (Home)
+├── requirements.txt               # Pinned production dependencies
+├── README.md                      # Comprehensive project guide & dataset info
+└── .gitignore                     # Production Git ignore rules
 ```
+
+---
+
+## 📚 Documentation & Detailed Reports
+
+- **Detailed Technical Specification:** [docs/PROJECT_OVERVIEW.md](docs/PROJECT_OVERVIEW.md) — Comprehensive documentation answering the What, Why, How, model design mathematics, and business rationale.
+- **Academic & Corporate Word Report:** [docs/Smart_Retail_Analytics_Project_Report.docx](docs/Smart_Retail_Analytics_Project_Report.docx) — Formal Word report with tables, executive summaries, and methodology sections.
+- **Exploratory Data Analysis Notebook:** [notebooks/EDA.ipynb](notebooks/EDA.ipynb) — Executable Jupyter notebook walking through data ingestion, currency conversion, visual charts, and customer RFM profiles.
+

@@ -1,15 +1,33 @@
+# Python bytecode and caches
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
-.Python
+*$py.class
+*.so
+.pytest_cache/
+
+# Virtual Environments
 .env
-.venv
-venv/
+.venv/
 env/
-data/processed/
-.streamlit/
-*.log
+venv/
+ENV/
+
+# Streamlit configurations (track config.toml, ignore credentials/secrets)
+.streamlit/*
+!.streamlit/config.toml
+
+# Processed data cache (regenerable via python src/train_all.py)
+data/processed/*
+!data/processed/.gitkeep
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# System & OS artifacts
 .DS_Store
 Thumbs.db
-notebooks/.ipynb_checkpoints/
+desktop.ini
+*.log
+*.tmp
+*.bak
